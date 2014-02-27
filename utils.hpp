@@ -56,7 +56,7 @@ namespace Blit
       inline std::vector<std::string> split(const std::string& str, char delim)
       {
          std::vector<std::string> ret;
-         std::istringstream stream{str};
+         std::istringstream stream(str);
          std::string line;
 
          while (std::getline(stream, line, delim) && !line.empty())
@@ -67,31 +67,32 @@ namespace Blit
 
       inline std::string basedir(const std::string& path)
       {
-         auto last = path.find_last_of("/\\");
+         std::string::size_type last = path.find_last_of("/\\");
          if (last != std::string::npos)
             return path.substr(0, last);
          else
             return ".";
       }
 
+
       inline std::string tolower(const std::string& str)
       {
          std::string tmp;
-         std::transform(std::begin(str), std::end(str), std::back_inserter(tmp), [](char c) -> char { return ::tolower(c); });
+         std::transform(str.begin(), str.end(), std::back_inserter(tmp), ::tolower);
          return tmp;
       }
 
       inline std::string toupper(const std::string& str)
       {
          std::string tmp;
-         std::transform(std::begin(str), std::end(str), std::back_inserter(tmp), [](char c) -> char { return ::toupper(c); });
+         std::transform(str.begin(), str.end(), std::back_inserter(tmp),::toupper);
          return tmp;
       }
 
       // Mirrors std::stoi, as it doesn't seem to work on Mingw 64-bit.
       inline int stoi(const std::string& str)
       {
-         char *next = nullptr;
+         char *next = NULL;
          errno = 0;
          long res = strtol(str.c_str(), &next, 10);
          if (errno)
@@ -107,10 +108,10 @@ namespace Blit
       }
 
       template <typename T>
-      inline auto find_or_default(const T& mapper, const typename T::key_type& key, const typename T::mapped_type& def) -> typename T::mapped_type
+      inline typename T::mapped_type find_or_default(const T& mapper, const typename T::key_type& key, const typename T::mapped_type& def)
       {
-         auto itr = mapper.find(key);
-         if (itr == std::end(mapper))
+         typename T::iterator itr = mapper.find(key);
+         if (itr == mapper.end())
             return def;
 
          return itr->second;
@@ -129,7 +130,7 @@ namespace Blit
                   iterator(pugi::xml_node parent, const char* child, const char* attr) :
                      child_name(child), attr(attr), node(parent.child(child)), val(node.attribute(attr).value()) {}
 
-                  iterator() : child_name(nullptr), attr(nullptr) {}
+                  iterator() : child_name(NULL), attr(NULL) {}
 
                   const std::string& operator*() const { return val; }
                   const std::string* operator->() const { return &val; }
@@ -159,24 +160,16 @@ namespace Blit
             std::string child;
             std::string attr;
       };
-
-      template <typename T, typename... Args>
-      std::unique_ptr<T> make_unique(Args&&... args)
-      {
-         return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-      }
-
+// investigate
       class ScopeExit
       {
          public:
-            ScopeExit(std::function<void ()> fn) : fn(fn) {}
-            ~ScopeExit() { fn(); }
-
-            ScopeExit& operator=(const ScopeExit&) = delete;
-            ScopeExit(const ScopeExit&) = delete;
-
+            ScopeExit(void (*fn)()) : _fn(fn) {}
+            ~ScopeExit() { _fn(); }
          private:
-            std::function<void ()> fn;
+            ScopeExit& operator=(const ScopeExit&);
+            ScopeExit(const ScopeExit&);
+            void (*_fn)();
       };
    }
 }

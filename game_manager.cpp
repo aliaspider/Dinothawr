@@ -162,7 +162,7 @@ namespace Icy
 
    void GameManager::change_level(unsigned chapter, unsigned level) 
    {
-      game = Utils::make_unique<Game>(
+      game = new Game(
             chapters.at(chapter).level(level).path(), 
             chapter,
             level,

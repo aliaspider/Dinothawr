@@ -72,8 +72,12 @@ endif
 endif
 
 HEADERS := $(wildcard *.hpp) $(wildcard */*.hpp) $(wildcard vorbis/*.h) $(wildcard ogg/*.h)
-SOURCES := $(wildcard *.cpp) $(wildcard */*.cpp)
-CSOURCES := $(wildcard ogg/*.c) $(wildcard vorbis/*.c)
+#SOURCES := $(wildcard *.cpp) $(wildcard */*.cpp)
+#CSOURCES := $(wildcard ogg/*.c) $(wildcard vorbis/*.c)
+SOURCES := audio/utils.cpp pugixml/pugixml.cpp font.cpp rpng.cpp surface.cpp
+CSOURCES := ogg/bitwise.c ogg/framing.c vorbis/analysis.c vorbis/barkmel.c vorbis/bitrate.c vorbis/block.c vorbis/codebook.c vorbis/envelope.c vorbis/floor0.c vorbis/floor1.c vorbis/info.c vorbis/lookup.c vorbis/lpc.c vorbis/lsp.c vorbis/mapping0.c vorbis/mdct.c vorbis/psy.c vorbis/registry.c vorbis/res0.c vorbis/sharedbook.c vorbis/smallft.c vorbis/synthesis.c vorbis/vorbisenc.c vorbis/vorbisfile.c vorbis/window.c
+#SOURCES += surface_cluster.cpp audio/mixer.cpp bg_manager.cpp game.cpp game_manager.cpp libretro.cpp render_target.cpp sfx_manager.cpp surface_cache.cpp tilemap.cpp
+
 OBJECTS := $(SOURCES:.cpp=.o) $(CSOURCES:.c=.o)
 CXXFLAGS += -ffast-math -Wall -pedantic $(fpic) -I. -DOV_EXCLUDE_STATIC_CALLBACKS
 CFLAGS += -ffast-math $(fpic) -I. -Ivorbis

@@ -46,12 +46,12 @@ namespace Blit
 
       self_type operator|(self_type pix) const
       {
-         return { static_cast<T>(pixel | pix.pixel) };
+         return PixelBase(pixel | pix.pixel) ;
       }
 
       self_type operator&(self_type pix) const
       {
-         return { static_cast<T>(pixel & pix.pixel) };
+         return PixelBase(pixel & pix.pixel);
       }
 
       self_type& operator|=(self_type pix)
@@ -96,9 +96,14 @@ namespace Blit
             dst[x].set_if_alpha(src[x]);
       }
 
+      static self_type mask_rgb_function(self_type pix)
+      {
+         return pix & static_cast<self_type>(rgb_mask);
+      }
+
       static void mask_rgb(self_type *dst, std::size_t size)
       {
-         std::transform(dst, dst + size, dst, [](self_type pix) -> self_type { return pix & static_cast<self_type>(rgb_mask); });
+         std::transform(dst, dst + size, dst, mask_rgb_function);
       }
 
       template <T shift, T bits>
@@ -126,14 +131,14 @@ namespace Blit
       T pixel;
    };
 
-   typedef PixelBase<std::uint32_t,
+   typedef PixelBase<uint32_t,
            8, 24, // A
            8, 16, // R
            8,  8, // G
            8,  0> // B
       Pixel;
 
-   static_assert(sizeof(Pixel) == sizeof(typename Pixel::type), "PixelBase has padding.");
+//   static_assert(sizeof(Pixel) == sizeof(typename Pixel::type), "PixelBase has padding.");
 
    struct Pos
    {
@@ -144,10 +149,10 @@ namespace Blit
       Pos& operator-=(Pos pos)       { x -= pos.x; y -= pos.y; return *this; }
       Pos& operator*=(Pos pos)       { x *= pos.x; y *= pos.y; return *this; }
       Pos& operator/=(int div)       { x /= div; y /= div; return *this; }
-      Pos  operator+ (Pos pos) const { return { x + pos.x, y + pos.y }; }
-      Pos  operator- (Pos pos) const { return { x - pos.x, y - pos.y }; }
-      Pos  operator* (Pos pos) const { return { x * pos.x, y * pos.y }; }
-      Pos  operator/ (int div) const { return { x / div, y / div }; }
+      Pos  operator+ (Pos pos) const { return Pos( x + pos.x, y + pos.y ); }
+      Pos  operator- (Pos pos) const { return Pos( x - pos.x, y - pos.y ); }
+      Pos  operator* (Pos pos) const { return Pos( x * pos.x, y * pos.y ); }
+      Pos  operator/ (int div) const { return Pos( x / div, y / div ); }
       bool operator==(Pos pos) const { return x == pos.x && y == pos.y; }
       bool operator!=(Pos pos) const { return !(*this == pos); }
 
@@ -155,13 +160,13 @@ namespace Blit
       bool operator<(Pos pos) const
       {
          static_assert(CHAR_BIT * sizeof(int) == 32, "int is not 32-bit. This algorithm will fail.");
-         std::uint64_t self = static_cast<std::uint32_t>(x);
+         uint64_t self = static_cast<uint32_t>(x);
          self <<= 32;
-         self |= static_cast<std::uint32_t>(y);
+         self |= static_cast<uint32_t>(y);
 
-         std::uint64_t other = static_cast<std::uint32_t>(pos.x);
+         uint64_t other = static_cast<uint32_t>(pos.x);
          other <<= 32;
-         other |= static_cast<std::uint32_t>(pos.y);
+         other |= static_cast<uint32_t>(pos.y);
 
          return self < other;
       }
@@ -171,12 +176,12 @@ namespace Blit
 
    inline Pos operator-(Pos pos)
    {
-      return {-pos.x, -pos.y};
+      return Pos(-pos.x, -pos.y);
    }
 
    inline Pos operator*(int scale, Pos pos)
    {
-      return {scale * pos.x, scale * pos.y};
+      return Pos(scale * pos.x, scale * pos.y);
    }
 
    inline std::ostream& operator<<(std::ostream& ostr, Pos pos)
@@ -193,8 +198,8 @@ namespace Blit
 
       Rect& operator+=(Pos pos)       { this->pos += pos; return *this; }
       Rect& operator-=(Pos pos)       { this->pos -= pos; return *this; }
-      Rect  operator+ (Pos pos) const { return { this->pos + pos, w, h }; }
-      Rect  operator- (Pos pos) const { return { this->pos - pos, w, h }; }
+      Rect  operator+ (Pos pos) const { return Rect( this->pos + pos, w, h ); }
+      Rect  operator- (Pos pos) const { return Rect( this->pos - pos, w, h ); }
 
       // Intersection
       Rect  operator&(Rect rect) const
@@ -208,9 +213,9 @@ namespace Blit
          int height   = y_bottom - y_top;
 
          if (width <= 0 || height <= 0)
-            return {{0, 0}, 0, 0};
+            return Rect(Pos(0, 0), 0, 0);
          else
-            return {{x_left, y_top}, width, height};
+            return Rect(Pos(x_left, y_top), width, height);
       }
 
       Rect& operator&=(Rect rect)

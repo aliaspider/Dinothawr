@@ -26,17 +26,17 @@ namespace Blit
          struct Alt
          {
             std::shared_ptr<const Data> data;
-            std::string tag; 
+            std::string tag;
          };
 
          Surface();
          Surface(Pixel pix, int width, int height);
          Surface(std::shared_ptr<const Data> data);
          Surface(const std::vector<Alt>& alts, const std::string& start_id);
-         Surface(const Surface&) = default;
-         Surface& operator=(const Surface&) = default;
-         Surface(Surface&&) = default;
-         Surface& operator=(Surface&&) = default;
+         Surface(const Surface&);
+         Surface& operator=(const Surface&);
+         Surface(Surface&&);
+         Surface& operator=(Surface&&);
 
          Surface sub(Rect rect) const;
          void refill_color(Pixel pix);
@@ -50,7 +50,7 @@ namespace Blit
          Pixel pixel(Pos pos) const;
          const Pixel* pixel_raw(Pos pos) const;
 
-         std::pair<std::string, unsigned> active_alt() const { return { m_active_alt, m_active_alt_index }; }
+         std::pair<std::string, unsigned> active_alt() const { return std::pair<std::string, unsigned>( m_active_alt, m_active_alt_index ); }
          void active_alt(const std::string& id, unsigned index = 0);
          void active_alt_index(unsigned index);
 
@@ -94,9 +94,9 @@ namespace Blit
             unsigned tag;
          };
 
-         SurfaceCluster() = default;
-         SurfaceCluster(SurfaceCluster&&) = default;
-         SurfaceCluster& operator=(SurfaceCluster&&) = default;
+         SurfaceCluster();
+         SurfaceCluster(SurfaceCluster&&);
+         SurfaceCluster& operator=(SurfaceCluster&&);
 
          std::vector<Elem>& vec();
          const std::vector<Elem>& vec() const;
@@ -123,10 +123,10 @@ namespace Blit
    class RenderTarget
    {
       public:
-         RenderTarget() = default;
+         RenderTarget();
          RenderTarget(int width, int height);
-         RenderTarget(RenderTarget&&) = default;
-         RenderTarget& operator=(RenderTarget&&) = default;
+         RenderTarget(RenderTarget&&);
+         RenderTarget& operator=(RenderTarget&&);
 
          Surface convert_surface();
 

@@ -11,15 +11,15 @@ namespace Blit
       public:
          Font();
          Font(const std::string& font);
-         Font(const Font&) = default;
-         Font& operator=(const Font&) = default;
-         Font(Font&&) = default;
-         Font& operator=(Font&&) = default;
+         Font(const Font&);
+         Font& operator=(const Font&);
+         Font(Font&&);
+         Font& operator=(Font&&);
 
          const Surface& surface(char c) const; 
-         Pos glyph_size() const { return { glyphwidth, glyphheight }; }
+         Pos glyph_size() const { return Pos( glyphwidth, glyphheight ); }
 
-         enum class RenderAlignment : unsigned
+         enum RenderAlignment
          {
             Left = 0,
             Right,
@@ -40,28 +40,28 @@ namespace Blit
    class FontCluster
    {
       public:
-         FontCluster() = default;
-         FontCluster(const FontCluster&) = default;
-         FontCluster& operator=(const FontCluster&) = default;
-         FontCluster(FontCluster&&) = default;
-         FontCluster& operator=(FontCluster&&) = default;
+         FontCluster();
+         FontCluster(const FontCluster&);
+         FontCluster& operator=(const FontCluster&);
+         FontCluster(FontCluster&&);
+         FontCluster& operator=(FontCluster&&);
 
          Pos glyph_size() const;
 
          void add_font(const std::string& font, Pos offset, Pixel color, std::string id = "");
          void set_id(std::string id);
          void render_msg(RenderTarget& target, const std::string& msg, int x, int y,
-               Font::RenderAlignment dir = Font::RenderAlignment::Left, int newline_offset = 0) const;
+               Font::RenderAlignment dir = Font::Left, int newline_offset = 0) const;
 
       private:
          struct OffsetFont : public Font
          {
-            OffsetFont() = default;
+            OffsetFont();
             OffsetFont(const std::string& font);
-            OffsetFont(const OffsetFont&) = default;
-            OffsetFont& operator=(const OffsetFont&) = default;
-            OffsetFont(OffsetFont&&) = default;
-            OffsetFont& operator=(OffsetFont&&) = default;
+            OffsetFont(const OffsetFont&);
+            OffsetFont& operator=(const OffsetFont&);
+            OffsetFont(OffsetFont&&);
+            OffsetFont& operator=(OffsetFont&&);
 
             void render_msg(RenderTarget& target, const std::string& msg, int x, int y,
                   Font::RenderAlignment dir, int newline_offset) const;
@@ -70,6 +70,9 @@ namespace Blit
 
          std::map<std::string, std::vector<OffsetFont>> fonts_map;
          std::string current_id;
+
+         static bool func_x (const OffsetFont& a, const OffsetFont& b);
+         static bool func_y(const OffsetFont& a, const OffsetFont& b);
    };
 }
 

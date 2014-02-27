@@ -7,11 +7,11 @@
 #include <utility>
 #include <cmath>
 #include <string>
-#include <future>
-#include <chrono>
+//#include <future>
+//#include <chrono>
 #include <queue>
-#include <mutex>
-#include <atomic>
+//#include <mutex>
+//#include <atomic>
 #include <vorbis/vorbisfile.h>
 
 namespace Audio
@@ -72,22 +72,23 @@ namespace Audio
 
       private:
          std::shared_ptr<std::vector<float>> data;
-         std::atomic<std::size_t> ptr;
+         std::size_t ptr;
    };
 
    class WAVFile
    {
-      public:
-         WAVFile() = delete;
+         WAVFile();
+      public:         
          static std::vector<float> load_wave(const std::string& path);
    };
 
    class VorbisFile : public Stream
    {
+         VorbisFile& operator=(const VorbisFile&);
+         VorbisFile(const VorbisFile&);
       public:
          VorbisFile(const std::string& path);
-         VorbisFile& operator=(const VorbisFile&) = delete;
-         VorbisFile(const VorbisFile&) = delete;
+
 
          ~VorbisFile();
 
@@ -113,7 +114,7 @@ namespace Audio
          size_t size() const { return inflight.size(); }
 
       private:
-         std::vector<std::future<std::vector<float>>> inflight;
+         std::vector<std::vector<float>> inflight;
          std::queue<std::vector<float>> finished;
 
          void cleanup();
@@ -125,15 +126,15 @@ namespace Audio
          static const unsigned channels = 2;
 
          Mixer();
-         Mixer& operator=(Mixer&&) = default;
-         Mixer(Mixer&&) = default;
+         Mixer& operator=(Mixer&&);
+         Mixer(Mixer&&);
 
          void add_stream(std::shared_ptr<Stream> str);
 
          void clear();
 
          void render(float *buffer, std::size_t frames);
-         void render(std::int16_t *buffer, std::size_t frames);
+         void render(int16_t *buffer, std::size_t frames);
          void master_volume(float vol) { master_vol = vol; }
          float master_volume() const { return master_vol; }
 

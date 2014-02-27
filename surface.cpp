@@ -7,45 +7,56 @@ using namespace std;
 
 namespace Blit
 {
+
    Surface::Surface(Pixel pix, int width, int height)
       : data(make_shared<Data>(pix, width, height)),
-      m_active_alt_index(0), m_rect({0, 0}, width, height), m_ignore_camera(false)
+        m_active_alt_index(0), m_rect(Pos(0, 0), width, height), m_ignore_camera(false)
    {}
 
    Surface::Surface(shared_ptr<const Data> data)
-      : data(data), m_active_alt_index(0), m_rect({0, 0}, data->w, data->h), m_ignore_camera(false)
+      : data(data), m_active_alt_index(0), m_rect(Pos(0, 0), data->w, data->h), m_ignore_camera(false)
    {}
 
+   static bool same_size_func(const vector<Surface::Alt>& alts, Pos size)
+   {
+      for( vector<Surface::Alt>::const_iterator alt = alts.begin(); alt!=alts.end(); alt++ )
+         if(size != Pos(alt->data->w, alt->data->h))
+            return false;
+      return true;
+   }
    Surface::Surface(const vector<Alt>& alts, const string& start_id) : m_ignore_camera(false)
    {
       if (alts.empty())
          throw logic_error("Alts is empty.");
 
-      Pos size{alts.front().data->w, alts.front().data->h};
-      m_rect = {{0, 0}, size.x, size.y};
+      Pos size(alts.front().data->w, alts.front().data->h);
+      m_rect = Rect(Pos(0, 0), size.x, size.y);
 
-      bool same_size = all_of(begin(alts) + 1, end(alts), [&alts, size](const Alt& alt) {
-               return size == Pos{alt.data->w, alt.data->h};
-            });
+      bool same_size = same_size_func(alts,size);
 
       if (!same_size)
          throw logic_error("Not all alts are of same size.");
 
-      for (auto& alt : alts)
-         this->alts.insert({alt.tag, alt.data});
-
+      for( vector<Alt>::const_iterator alt = alts.begin(); alt!=alts.end(); alt++ )
+         this->alts.insert(std::pair<std::string, std::shared_ptr<const Data>>(alt->tag, alt->data));
       active_alt(start_id);
    }
 
    void Surface::active_alt(const string& id, unsigned index)
    {
-      auto itr = alts.equal_range(id);
-      auto dist = distance(itr.first, itr.second);
+      std::pair
+         <std::multimap<std::string, std::shared_ptr<const Data>>::const_iterator,
+          std::multimap<std::string, std::shared_ptr<const Data>>::const_iterator>
+            itr = alts.equal_range(id);
+
+      iterator_traits<std::multimap<std::string,std::shared_ptr<const Data>>::const_iterator>::
+         difference_type dist = distance(itr.first, itr.second);
+
       if (dist <= static_cast<int>(index))
          throw logic_error(Utils::join("Subindex is out of bounds. Requested Alt: \"", id, "\" Index: ", index));
 
       advance(itr.first, index);
-      auto ptr = itr.first->second;
+      std::shared_ptr<const Data> ptr = itr.first->second;
       if (!ptr)
          throw logic_error(Utils::join("Alt ID ", id, " does not exist."));
 
@@ -60,13 +71,13 @@ namespace Blit
    }
 
    Surface::Surface()
-      : m_rect({0, 0}, 0, 0), m_ignore_camera(false)
+      : m_rect(Pos(0, 0), 0, 0), m_ignore_camera(false)
    {}
 
    Surface Surface::sub(Rect rect) const
    {
       RenderTarget target(rect.w, rect.h);
-      Surface surf{*this};
+      Surface surf(*this);
       surf.rect().pos = -rect.pos;
       target.blit(surf, rect);
       return target.convert_surface();
@@ -98,15 +109,20 @@ namespace Blit
       return &data->pixels[y * data->w + x];
    }
 
+   static Pixel* pixel_ptr = NULL;
+   static Pixel transform_func(Pixel old)
+   {
+      return old & static_cast<Pixel>(Pixel::alpha_mask) ? *pixel_ptr : Pixel();
+   }
+
    void Surface::refill_color(Pixel pixel)
    {
       vector<Pixel> pix;
       pix.reserve(data->w * data->h);
 
-      auto& orig = data->pixels;
-      transform(begin(orig), end(orig), back_inserter(pix), [pixel](Pixel old) {
-            return old & static_cast<Pixel>(Pixel::alpha_mask) ? pixel : Pixel();
-         });
+      const std::vector<Pixel>& orig = data->pixels;
+      pixel_ptr = &pixel;
+      transform(orig.begin(), orig.end(), back_inserter(pix), transform_func);
 
       data = make_shared<Surface::Data>(move(pix), data->w, data->h);
    }
@@ -128,7 +144,7 @@ namespace Blit
    Surface::Data::Data(Pixel pixel, int w, int h)
       : pixels(w * h)
    {
-      fill(begin(pixels), end(pixels), pixel);
+      fill(pixels.begin(), pixels.end(), pixel);
    }
 }
 
